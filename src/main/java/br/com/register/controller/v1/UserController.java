@@ -1,9 +1,10 @@
-package br.com.register.controller;
+package br.com.register.controller.v1;
 
 import br.com.register.controller.mapper.UserMapper;
 import br.com.register.controller.request.UserRequest;
 import br.com.register.model.User;
 import br.com.register.repository.UserRepository;
+import br.com.register.repository.UserRepositoryDefinition;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,11 +22,13 @@ public class UserController {
 
     private final UserRepository repository;
     private final UserMapper mapper;
+    private final UserRepositoryDefinition repositoryDefinition;
 
     @Autowired
-    public UserController(UserRepository repository, UserMapper mapper) {
+    public UserController(UserRepository repository, UserMapper mapper, UserRepositoryDefinition repositoryDefinition) {
         this.repository = repository;
         this.mapper = mapper;
+        this.repositoryDefinition = repositoryDefinition;
     }
 
     @PostMapping
@@ -38,13 +41,13 @@ public class UserController {
     }
 
     @GetMapping
-    public List<User> findAll(){
-        return repository.findAll();
+    public List<UserRequest> findAll(){
+        return mapper.convertUsersToUsersRequest(repository.findAll());
     }
 
     @GetMapping("{id}")
-    public User findById(@PathVariable Long id){
-        return repository.findOne(id);
+    public UserRequest findById(@PathVariable Long id){
+        return mapper.convertUserToUserRequest(repository.findOne(id));
     }
 
     @PutMapping("{id}")

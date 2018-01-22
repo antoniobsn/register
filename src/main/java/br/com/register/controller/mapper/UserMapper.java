@@ -7,6 +7,9 @@ import br.com.register.repository.CompanyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by asampaio on 07/01/18.
  */
@@ -32,5 +35,14 @@ public class UserMapper {
 
     public UserRequest convertUserToUserRequest(User user){
         return new UserRequest(user.getCpf(), user.getName(), user.getEmail(), user.getOffice(), user.getCompany().getId());
+    }
+
+    public List<UserRequest> convertUsersToUsersRequest(List<User> users){
+        List<UserRequest> usersRequest = new ArrayList<>();
+
+        for (User user : users){
+            usersRequest.add(convertUserToUserRequest(user));
+        }
+        return usersRequest;
     }
 }
