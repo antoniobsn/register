@@ -25,10 +25,6 @@ public class UserMapper {
     }
 
     public User convertUserRequestToUser(UserRequest request){
-        return new User(request.getCpf(), request.getName(), request.getEmail(), request.getOffice());
-    }
-
-    public User convertUserRequestToUserFull(UserRequest request){
         Company company = companyRepository.findOne(request.getCompanyId());
         return new User(request.getCpf(), request.getName(), request.getEmail(), request.getOffice(), company);
     }
@@ -37,7 +33,7 @@ public class UserMapper {
         return new UserRequest(user.getCpf(), user.getName(), user.getEmail(), user.getOffice(), user.getCompany().getId());
     }
 
-    public List<UserRequest> convertUsersToUsersRequest(List<User> users){
+    public List<UserRequest> convertUsersToUsersRequest(Iterable<User> users){
         List<UserRequest> usersRequest = new ArrayList<>();
 
         for (User user : users){

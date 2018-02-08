@@ -8,6 +8,7 @@ import br.com.register.repository.UserRepositoryDefinition;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,22 +23,22 @@ public class UserController {
 
     private final UserRepository repository;
     private final UserMapper mapper;
-    private final UserRepositoryDefinition repositoryDefinition;
 
     @Autowired
-    public UserController(UserRepository repository, UserMapper mapper, UserRepositoryDefinition repositoryDefinition) {
+    public UserController(UserRepository repository, UserMapper mapper) {
         this.repository = repository;
         this.mapper = mapper;
-        this.repositoryDefinition = repositoryDefinition;
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public UserRequest create(@RequestBody UserRequest request){
-        User user = mapper.convertUserRequestToUserFull(request);
+    public ResponseEntity<UserRequest> create(@RequestBody UserRequest request){
+
+        User user = mapper.convertUserRequestToUser(request);
         User userSaved = repository.saveAndFlush(user);
         UserRequest userRequest = mapper.convertUserToUserRequest(userSaved);
-        return userRequest;
+
+        return new ResponseEntity<>(userRequest, HttpStatus.CREATED);
     }
 
     @GetMapping
@@ -46,23 +47,32 @@ public class UserController {
     }
 
     @GetMapping("{id}")
-    public UserRequest findById(@PathVariable Long id){
-        return mapper.convertUserToUserRequest(repository.findOne(id));
+    public ResponseEntity<UserRequest> findById(@PathVariable Long id){
+
+        UserRequest userRequest = mapper.convertUserToUserRequest(repository.findOne(id));
+
+        return new ResponseEntity<>(userRequest, HttpStatus.OK);
     }
 
     @PutMapping("{id}")
-    public User update(@PathVariable Long id, @RequestBody UserRequest request){
-        User user = mapper.convertUserRequestToUserFull(request);
+    public ResponseEntity<UserRequest> update(@PathVariable Long id, @RequestBody UserRequest request){
+
+        User user = mapper.convertUserRequestToUser(request);
         User existingUser = repository.findOne(id);
         BeanUtils.copyProperties(user, existingUser);
-        return repository.saveAndFlush(existingUser);
+        UserRequest userRequest = mapper.convertUserToUserRequest(repository.saveAndFlush(existingUser));
+
+        return new ResponseEntity<>(userRequest, HttpStatus.OK);
     }
 
     @DeleteMapping("{id}")
-    public User delete(@PathVariable Long id){
+    public ResponseEntity<UserRequest> delete(@PathVariable Long id){
+
         User existingUser = repository.findOne(id);
         repository.delete(existingUser);
-        return existingUser;
+        UserRequest deletedUser = mapper.convertUserToUserRequest(existingUser);
+
+        return new ResponseEntity<>(deletedUser, HttpStatus.OK);
     }
 
 }

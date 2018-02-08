@@ -2,7 +2,6 @@ package br.com.register.repository;
 
 import br.com.register.model.User;
 import org.springframework.data.repository.RepositoryDefinition;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
@@ -21,6 +20,8 @@ public interface UserRepositoryDefinition {
 
     User findOne(Long id);
 
-    List<User> findAll(List<Long> ids);
+    List<User> findAll();
+
+    Iterable<User> findAll(Iterable ids);
 
 }

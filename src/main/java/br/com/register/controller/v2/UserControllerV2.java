@@ -26,6 +26,7 @@ public class UserControllerV2 {
 
     @GetMapping
     public List<UserRequest> findByList(@RequestParam List<Long> ids){
+        Iterable<User> all = repository.findAll(ids);
         return mapper.convertUsersToUsersRequest(repository.findAll(ids));
     }
 
