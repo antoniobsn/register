@@ -42,8 +42,9 @@ public class UserController {
     }
 
     @GetMapping
-    public List<UserRequest> findAll(){
-        return mapper.convertUsersToUsersRequest(repository.findAll());
+    public ResponseEntity<List<UserRequest>> findAll(){
+        return new ResponseEntity<List<UserRequest>>(
+                mapper.convertUsersToUsersRequest(repository.findAll()), HttpStatus.OK);
     }
 
     @GetMapping("{id}")
