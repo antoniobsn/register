@@ -3,9 +3,9 @@ package br.com.register.controller.v1;
 import br.com.register.controller.mapper.UserMapper;
 import br.com.register.controller.request.UserRequest;
 import br.com.register.model.User;
+import br.com.register.repository.CompanyRepository;
 import br.com.register.repository.UserRepository;
-import br.com.register.repository.UserRepositoryDefinition;
-import org.springframework.beans.BeanUtils;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,7 +43,7 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<List<UserRequest>> findAll(){
-        return new ResponseEntity<List<UserRequest>>(
+        return new ResponseEntity<>(
                 mapper.convertUsersToUsersRequest(repository.findAll()), HttpStatus.OK);
     }
 
@@ -56,15 +56,17 @@ public class UserController {
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<UserRequest> update(@PathVariable Long id, @RequestBody UserRequest request){
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<UserRequest> update(@PathVariable Long id, @RequestBody UserRequest request) {
 
-        User user = mapper.convertUserRequestToUser(request);
-        User existingUser = repository.findOne(id);
-        BeanUtils.copyProperties(user, existingUser);
-        UserRequest userRequest = mapper.convertUserToUserRequest(repository.saveAndFlush(existingUser));
+        User currentUser = mapper.convertUserRequestToUser(request);
+        User updatedUser = mapper.convertExistingToCurrent(currentUser, id);
 
-        return new ResponseEntity<>(userRequest, HttpStatus.OK);
+        UserRequest userResponse = mapper.convertUserToUserRequest(repository.saveAndFlush(updatedUser));
+
+        return new ResponseEntity<>(userResponse, HttpStatus.OK);
     }
+
 
     @DeleteMapping("{id}")
     public ResponseEntity<UserRequest> delete(@PathVariable Long id){

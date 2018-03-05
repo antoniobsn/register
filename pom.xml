@@ -56,23 +56,18 @@
       <artifactId>spring-test</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.flywaydb.flyway-test-extensions</groupId>
-      <artifactId>flyway-spring5-test</artifactId>
-      <scope>test</scope>
-      <version>5.0.0</version>
-    </dependency>
 
     <!--Data Base-->
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.flywaydb</groupId>
-      <artifactId>flyway-core</artifactId>
-    </dependency>
 
+    <dependency>
+      <groupId>commons-beanutils</groupId>
+      <artifactId>commons-beanutils</artifactId>
+      <version>1.6</version>
+    </dependency>
 
   </dependencies>
 </project>

@@ -1,9 +1,11 @@
 package br.com.register.model;
 
 import br.com.register.enums.Office;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
-import java.time.LocalDate;
+import java.util.Date;
 
 /**
  * Created by asampaio on 30/12/17.
@@ -28,20 +30,17 @@ public class User{
     @JoinColumn(name = "company_id", nullable = true)
     private Company company;
 
+    @CreationTimestamp
+    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_at", columnDefinition = "DATE")
-    private LocalDate createdAt;
+    private Date createdAt;
 
+    @UpdateTimestamp
+    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "updated_at", columnDefinition = "DATE")
-    private LocalDate updatedAt;
+    private Date updatedAt;
 
     public User() {
-    }
-
-    public User(String cpf, String name, String email, Office office) {
-        this.cpf = cpf;
-        this.name = name;
-        this.email = email;
-        this.office = office;
     }
 
     public User(String cpf, String name, String email, Office office, Company company) {
@@ -52,34 +51,43 @@ public class User{
         this.company = company;
     }
 
-    @PrePersist
-    public void onPrePersist() {
-        this.createdAt = LocalDate.now();
-        this.updatedAt = LocalDate.now();
-    }
-
-    @PreUpdate
-    public void onPreUpdate() {
-        this.updatedAt = LocalDate.now();
-    }
-
     public String getCpf() {
         return cpf;
+    }
+
+    public void setCpf(String cpf) {
+        this.cpf = cpf;
     }
 
     public String getName() {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getEmail() {
         return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public Office getOffice() {
         return office;
     }
 
+    public void setOffice(Office office) {
+        this.office = office;
+    }
+
     public Company getCompany() {
         return company;
+    }
+
+    public void setCompany(Company company) {
+        this.company = company;
     }
 }

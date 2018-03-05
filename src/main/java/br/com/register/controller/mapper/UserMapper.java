@@ -4,6 +4,7 @@ import br.com.register.controller.request.UserRequest;
 import br.com.register.model.Company;
 import br.com.register.model.User;
 import br.com.register.repository.CompanyRepository;
+import br.com.register.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -18,10 +19,12 @@ import java.util.List;
 public class UserMapper {
 
     private final CompanyRepository companyRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    public UserMapper(CompanyRepository companyRepository) {
+    public UserMapper(CompanyRepository companyRepository, UserRepository userRepository) {
         this.companyRepository = companyRepository;
+        this.userRepository = userRepository;
     }
 
     public User convertUserRequestToUser(UserRequest request){
@@ -40,5 +43,18 @@ public class UserMapper {
             usersRequest.add(convertUserToUserRequest(user));
         }
         return usersRequest;
+    }
+
+    public User convertExistingToCurrent(User currentUser, Long id) {
+
+        User existingUser = userRepository.findOne(id);
+
+        existingUser.setCpf(currentUser.getCpf());
+        existingUser.setName(currentUser.getName());
+        existingUser.setEmail(currentUser.getEmail());
+        existingUser.setOffice(currentUser.getOffice());
+        existingUser.setCompany(companyRepository.findOne(currentUser.getCompany().getId()));
+
+        return existingUser;
     }
 }
