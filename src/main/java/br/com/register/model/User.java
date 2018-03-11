@@ -51,6 +51,17 @@ public class User{
         this.company = company;
     }
 
+    public User convertExistingToCurrent(User existingUser, User currentUser){
+
+        existingUser.cpf = currentUser.getCpf();
+        existingUser.name = currentUser.getName();
+        existingUser.email = currentUser.getEmail();
+        existingUser.office = currentUser.getOffice();
+        existingUser.company = currentUser.getCompany();
+
+        return  existingUser;
+    }
+
     public String getCpf() {
         return cpf;
     }

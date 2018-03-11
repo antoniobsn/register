@@ -3,15 +3,16 @@ package br.com.register.controller.v1;
 import br.com.register.controller.mapper.UserMapper;
 import br.com.register.controller.request.UserRequest;
 import br.com.register.model.User;
-import br.com.register.repository.CompanyRepository;
 import br.com.register.repository.UserRepository;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by asampaio on 30/12/17.
@@ -48,9 +49,15 @@ public class UserController {
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<UserRequest> findById(@PathVariable Long id){
+    public ResponseEntity<UserRequest> findById(@PathVariable Long id) throws NoHandlerFoundException {
 
-        UserRequest userRequest = mapper.convertUserToUserRequest(repository.findOne(id));
+        User user = repository.findOne(id);
+
+        if(user == null){
+            throw new NoHandlerFoundException(HttpStatus.NOT_FOUND.toString(), "api/v1/users/"+id, new HttpHeaders());
+        }
+
+        UserRequest userRequest = mapper.convertUserToUserRequest(user);
 
         return new ResponseEntity<>(userRequest, HttpStatus.OK);
     }
