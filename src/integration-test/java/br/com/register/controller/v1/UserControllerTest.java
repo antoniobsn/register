@@ -3,6 +3,7 @@ package br.com.register.controller.v1;
 import br.com.register.controller.request.UserRequest;
 import br.com.register.enums.Office;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,11 +13,23 @@ import org.springframework.http.*;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultMatcher;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Created by asampaio on 07/02/18.
@@ -39,6 +52,15 @@ public class UserControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private WebApplicationContext wac;
+
+    private MockMvc mockMvc;
+    @Before
+    public void setup() throws Exception {
+        this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
+    }
+
     @Test
     @Sql(scripts = "classpath:sql/companies/insert-first_company.sql")
     public void shouldCreate() throws Exception {
@@ -57,6 +79,27 @@ public class UserControllerTest {
         assertEquals("UsuarioIntegrationTest1", responseEntity.getBody().getName());
         assertEquals("usuario_integration_test_1@gmail.com", responseEntity.getBody().getEmail());
         assertEquals("FINAL_USER", responseEntity.getBody().getOffice().getDescription().toUpperCase());
+    }
+
+    @Test
+    @Sql(scripts = "classpath:sql/companies/insert-first_company.sql")
+    public void create() throws Exception {
+
+        UserRequest userRequest = new UserRequest(
+                "72805764196",
+                "UsuarioIntegrationTest1",
+                "usuario_integration_test_1@gmail.com",
+                Office.FINAL_USER,
+                FIRST_COMPANY_ID);
+
+        mockMvc.perform(post(BASE_PATH)
+                .contentType("application/json;charset=UTF-8")
+                .content(asJsonString(userRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("cpf").value("72805764196"))
+                .andExpect(jsonPath("name").value("UsuarioIntegrationTest1"))
+                .andExpect(jsonPath("email").value("usuario_integration_test_1@gmail.com"))
+                .andExpect(jsonPath("office").value(Office.FINAL_USER.getDescription().toUpperCase()));
     }
 
 
@@ -84,6 +127,19 @@ public class UserControllerTest {
         assertEquals("Usuario3", users.get(1).getName());
         assertEquals("usuario_3@emil.com.br", users.get(1).getEmail());
         assertEquals("FINAL_USER", users.get(1).getOffice().getDescription().toUpperCase());
+    }
+
+    @Test
+    @Sql(scripts = {"classpath:sql/companies/insert-first_company.sql", "classpath:sql/users/insert-multiple_users.sql"})
+    public void findAll() throws Exception {
+//        mockMvc.perform(get(BASE_PATH))
+//                .andExpect(status().isOk())
+//                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+//                .andExpect(jsonPath("$", hasSize(2)))
+//                .andExpect(jsonPath("$[0].id", is(1)))
+//                .andExpect(jsonPath("$[0].username", is("Daenerys Targaryen")))
+//                .andExpect(jsonPath("$[1].id", is(2)))
+//                .andExpect(jsonPath("$[1].username", is("John Snow")));
     }
 
 
@@ -136,6 +192,14 @@ public class UserControllerTest {
         assertEquals("usuario_1@emil.com.br", responseEntity.getBody().getEmail());
         assertEquals("FINAL_USER", responseEntity.getBody().getOffice().getDescription().toUpperCase());
 
+    }
+
+    public static String asJsonString(final Object obj) {
+        try {
+            return new ObjectMapper().writeValueAsString(obj);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }
