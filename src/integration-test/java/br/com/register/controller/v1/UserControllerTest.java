@@ -9,27 +9,18 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.*;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultMatcher;
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.core.Is.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Created by asampaio on 07/02/18.
@@ -72,18 +63,30 @@ public class UserControllerTest {
                 Office.FINAL_USER,
                 FIRST_COMPANY_ID);
 
-        ResponseEntity<UserRequest> responseEntity = restTemplate.postForEntity(BASE_PATH, userRequest, UserRequest.class);
-
-        assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
-        assertEquals("72805764196", responseEntity.getBody().getCpf());
-        assertEquals("UsuarioIntegrationTest1", responseEntity.getBody().getName());
-        assertEquals("usuario_integration_test_1@gmail.com", responseEntity.getBody().getEmail());
-        assertEquals("FINAL_USER", responseEntity.getBody().getOffice().getDescription().toUpperCase());
+        mockMvc.perform(post(BASE_PATH)
+                .contentType("application/json;charset=UTF8")
+                .content(asJsonString(userRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("cpf").value("72805764196"))
+                .andExpect(jsonPath("name").value("UsuarioIntegrationTest1"))
+                .andExpect(jsonPath("email").value("usuario_integration_test_1@gmail.com"));
     }
 
     @Test
-    @Sql(scripts = "classpath:sql/companies/insert-first_company.sql")
-    public void create() throws Exception {
+    @Sql(scripts = {"classpath:sql/companies/insert-first_company.sql", "classpath:sql/users/insert-first_user.sql"})
+    public void shouldDelete() throws Exception {
+        mockMvc.perform(delete(BASE_PATH+"/{id}", FIRST_USER_ID.intValue())
+                .contentType("application/json;charset=UTF-8"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("cpf").value("87705417014"))
+                .andExpect(jsonPath("name").value("Usuario1"))
+                .andExpect(jsonPath("email").value("usuario_1@emil.com.br"))
+                .andExpect(jsonPath("office").value(Office.FINAL_USER.getDescription().toUpperCase()));
+    }
+
+    @Test
+    @Sql(scripts = {"classpath:sql/companies/insert-first_company.sql", "classpath:sql/users/insert-first_user.sql"})
+    public void shouldUpdate() throws Exception {
 
         UserRequest userRequest = new UserRequest(
                 "72805764196",
@@ -92,107 +95,49 @@ public class UserControllerTest {
                 Office.FINAL_USER,
                 FIRST_COMPANY_ID);
 
-        mockMvc.perform(post(BASE_PATH)
-                .contentType("application/json;charset=UTF-8")
-                .content(asJsonString(userRequest)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("cpf").value("72805764196"))
-                .andExpect(jsonPath("name").value("UsuarioIntegrationTest1"))
-                .andExpect(jsonPath("email").value("usuario_integration_test_1@gmail.com"))
+        mockMvc.perform(
+                put(BASE_PATH+"/{id}", FIRST_USER_ID.intValue())
+                        .contentType("application/json;charset=UTF-8")
+                        .content(asJsonString(userRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("cpf").value("25506893051"))
+                .andExpect(jsonPath("name").value("UsuarioIntegrationTest1Alterado"))
+                .andExpect(jsonPath("email").value("usuario_integration_test_1_alterado@gmail.com"))
                 .andExpect(jsonPath("office").value(Office.FINAL_USER.getDescription().toUpperCase()));
     }
 
-
     @Test
-    @Sql(scripts = {"classpath:sql/companies/insert-first_company.sql", "classpath:sql/users/insert-multiple_users.sql"})
-    public void shouldFindAll() throws Exception {
-
-        String response = restTemplate.getForObject(BASE_PATH, String.class);
-
-        List<UserRequest> users = objectMapper
-                .readValue(response,
-                        objectMapper.getTypeFactory().constructCollectionType(List.class, UserRequest.class));
-
-        assertEquals(HttpStatus.OK, HttpStatus.OK);
-        assertEquals(2, users.size());
-
-        assertEquals("1", users.get(0).getCompanyId().toString());
-        assertEquals("57778715007", users.get(0).getCpf());
-        assertEquals("Usuario2", users.get(0).getName());
-        assertEquals("usuario_2@emil.com.br", users.get(0).getEmail());
-        assertEquals("FINAL_USER", users.get(0).getOffice().getDescription().toUpperCase());
-
-        assertEquals("1", users.get(1).getCompanyId().toString());
-        assertEquals("78479876000", users.get(1).getCpf());
-        assertEquals("Usuario3", users.get(1).getName());
-        assertEquals("usuario_3@emil.com.br", users.get(1).getEmail());
-        assertEquals("FINAL_USER", users.get(1).getOffice().getDescription().toUpperCase());
+    @Sql(scripts = {"classpath:sql/companies/insert-first_company.sql", "classpath:sql/users/insert-first_user.sql"})
+    public void findById() throws Exception {
+        mockMvc.perform(get(BASE_PATH+"/{1}", FIRST_USER_ID.intValue()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+                .andExpect(jsonPath("cpf", is("87705417014")))
+                .andExpect(jsonPath("name", is("Usuario1")))
+                .andExpect(jsonPath("email", is("usuario_1@emil.com.br")))
+                .andExpect(jsonPath("office" , is(Office.FINAL_USER.toString())));
     }
+
+
 
     @Test
     @Sql(scripts = {"classpath:sql/companies/insert-first_company.sql", "classpath:sql/users/insert-multiple_users.sql"})
     public void findAll() throws Exception {
-//        mockMvc.perform(get(BASE_PATH))
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-//                .andExpect(jsonPath("$", hasSize(2)))
-//                .andExpect(jsonPath("$[0].id", is(1)))
-//                .andExpect(jsonPath("$[0].username", is("Daenerys Targaryen")))
-//                .andExpect(jsonPath("$[1].id", is(2)))
-//                .andExpect(jsonPath("$[1].username", is("John Snow")));
+        mockMvc.perform(get(BASE_PATH))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+                .andExpect(jsonPath("$[2].company_id", is(FIRST_COMPANY_ID.intValue())))
+                .andExpect(jsonPath("$[2].cpf", is("57778715007")))
+                .andExpect(jsonPath("$[2].name", is("Usuario2")))
+                .andExpect(jsonPath("$[2].email", is("usuario_2@emil.com.br")))
+                .andExpect(jsonPath("$[2].office" , is(Office.FINAL_USER.toString())))
+                .andExpect(jsonPath("$[3].company_id", is(FIRST_COMPANY_ID.intValue())))
+                .andExpect(jsonPath("$[3].cpf", is("78479876000")))
+                .andExpect(jsonPath("$[3].name", is("Usuario3")))
+                .andExpect(jsonPath("$[3].email", is("usuario_3@emil.com.br")))
+                .andExpect(jsonPath("$[3].office" , is(Office.FINAL_USER.toString())));
     }
 
-
-    @Test
-    @Sql(scripts = {"classpath:sql/companies/insert-first_company.sql", "classpath:sql/users/insert-first_user.sql"})
-    public void shouldFindById() throws Exception {
-
-        ResponseEntity<UserRequest> responseEntity = restTemplate.getForEntity(BASE_PATH + "/" + FIRST_USER_ID.toString(), UserRequest.class);
-
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals("1", responseEntity.getBody().getCompanyId().toString());
-        assertEquals("87705417014", responseEntity.getBody().getCpf());
-        assertEquals("Usuario1", responseEntity.getBody().getName());
-        assertEquals("usuario_1@emil.com.br", responseEntity.getBody().getEmail());
-        assertEquals("FINAL_USER", responseEntity.getBody().getOffice().getDescription().toUpperCase());
-
-    }
-
-    @Test
-    @Sql(scripts = {"classpath:sql/companies/insert-first_company.sql", "classpath:sql/users/insert-first_user.sql"})
-    public void update() throws Exception {
-
-        UserRequest userRequest = new UserRequest(
-                "25506893051",
-                "UsuarioIntegrationTest1Alterado",
-                "usuario_integration_test_1_alterado@gmail.com",
-                Office.FINAL_USER,
-                FIRST_COMPANY_ID);
-        HttpEntity<UserRequest> entity = new HttpEntity<>(userRequest);
-
-        ResponseEntity<UserRequest> responseEntity = restTemplate.exchange(BASE_PATH + "/" + FIRST_USER_ID.toString(), HttpMethod.PUT, entity, UserRequest.class);
-
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals("25506893051", responseEntity.getBody().getCpf());
-        assertEquals("UsuarioIntegrationTest1Alterado", responseEntity.getBody().getName());
-        assertEquals("usuario_integration_test_1_alterado@gmail.com", responseEntity.getBody().getEmail());
-        assertEquals("FINAL_USER", responseEntity.getBody().getOffice().getDescription().toUpperCase());
-    }
-
-
-    @Test
-    @Sql(scripts = {"classpath:sql/companies/insert-first_company.sql", "classpath:sql/users/insert-first_user.sql"})
-    public void delete() throws Exception {
-        ResponseEntity<UserRequest> responseEntity = restTemplate.exchange(BASE_PATH + "/" + FIRST_USER_ID.toString(), HttpMethod.DELETE, null,UserRequest.class);
-
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals("1", responseEntity.getBody().getCompanyId().toString());
-        assertEquals("87705417014", responseEntity.getBody().getCpf());
-        assertEquals("Usuario1", responseEntity.getBody().getName());
-        assertEquals("usuario_1@emil.com.br", responseEntity.getBody().getEmail());
-        assertEquals("FINAL_USER", responseEntity.getBody().getOffice().getDescription().toUpperCase());
-
-    }
 
     public static String asJsonString(final Object obj) {
         try {
