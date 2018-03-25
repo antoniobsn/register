@@ -3,8 +3,10 @@ package br.com.register.model;
 import br.com.register.enums.Office;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.validator.constraints.br.CPF;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 
 /**
@@ -19,8 +21,12 @@ public class User{
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @NotNull
+    @CPF
     private String cpf;
+
     private String name;
+
     private String email;
 
     @Enumerated(EnumType.STRING)

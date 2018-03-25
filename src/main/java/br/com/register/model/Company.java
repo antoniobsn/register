@@ -1,6 +1,9 @@
 package br.com.register.model;
 
+import org.hibernate.validator.constraints.br.CNPJ;
+
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
@@ -17,8 +20,12 @@ public class Company {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @NotNull
+    @CNPJ
     private String CNPJ;
+
     private String fantasyName;
+
     private String reasonSocial;
 
     @Column(name = "created_at", columnDefinition = "DATE")
@@ -26,6 +33,10 @@ public class Company {
 
     @Column(name = "updated_at", columnDefinition = "DATE")
     private LocalDate updatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "address_id", nullable = true)
+    private Address address;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "company")
     public Set<User> users = new HashSet<>();
@@ -36,17 +47,6 @@ public class Company {
         this.CNPJ = CNPJ;
         this.fantasyName = fantasyName;
         this.reasonSocial = reasonSocial;
-    }
-
-    @PrePersist
-    public void onPrePersist() {
-        this.createdAt = LocalDate.now();
-        this.updatedAt = LocalDate.now();
-    }
-
-    @PreUpdate
-    public void onPreUpdate() {
-        this.updatedAt = LocalDate.now();
     }
 
     public String getCNPJ() {

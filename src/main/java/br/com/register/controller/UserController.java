@@ -1,4 +1,4 @@
-package br.com.register.controller.v1;
+package br.com.register.controller;
 
 import br.com.register.controller.mapper.UserMapper;
 import br.com.register.controller.request.UserRequest;
